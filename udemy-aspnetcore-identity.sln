@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "udemy-aspnetcore-identity", "udemy-aspnetcore-identity\udemy-aspnetcore-identity.csproj", "{D07F5134-C98B-4E93-AC48-E91530071C58}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D07F5134-C98B-4E93-AC48-E91530071C58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D07F5134-C98B-4E93-AC48-E91530071C58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D07F5134-C98B-4E93-AC48-E91530071C58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D07F5134-C98B-4E93-AC48-E91530071C58}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7C0A0470-90A0-416F-B600-39B96023040F}
+	EndGlobalSection
+EndGlobal

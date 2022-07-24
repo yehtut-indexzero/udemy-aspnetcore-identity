@@ -1,0 +1,30 @@
+﻿@model SignUpViewModel;
+@{
+    ViewData["Title"] = "SingUp";
+    var roles = new List<String> { "Member", "Admin" };
+}
+
+<h1>SingUp</h1>
+@Html.ValidationSummary();
+<form asp-controller="Identity" asp-action="SingUp" method="post">
+    <div class="form-group col-4">
+        <label asp-for="Email">Email</label>
+        <input type="text" asp-for="Email" class="form-control"></input>
+    </div>
+    <div class="form-group col-4">
+        <label asp-for="Password">Password</label>
+        <input type="password" asp-for="Password" class="form-control"></input>
+    </div>
+
+    <div class="form-group col-4">
+        <label asp-for="Role"></label>
+        @Html.DropDownListFor(x=>x.Role, roles.Select(s=> new SelectListItem { Text=s, Value=s}),"Roles",null))
+    </div>
+
+    <button type="submit" class="btn btn-primary">Sing Up</button>
+</form>
+
+<div class="alert alert-info">
+    If you have already an account, please <a asp-action="SignIn">Sing In</a>
+</div>
+
