@@ -32,12 +32,25 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/SignIn";
     options.AccessDeniedPath = "/Identity/AccessDenied";
-    options.ExpireTimeSpan= TimeSpan.FromMinutes(15);
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
 });
 
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
 
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MemberDep", p =>
+    {
+        p.RequireClaim("Department", "Tech").RequireRole("Member");
+    });
+
+    options.AddPolicy("AdminDep", p =>
+    {
+        p.RequireClaim("Department", "Tech").RequireRole("Admin");
+    });
+});
 
 builder.Services.AddControllersWithViews();
 
@@ -56,6 +69,8 @@ app.UseRouting();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+
 
 app.MapControllerRoute(
     name: "default",

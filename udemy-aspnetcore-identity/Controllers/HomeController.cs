@@ -19,12 +19,13 @@ namespace udemy_aspnetcore_identity.Controllers
             return View();
         }
 
-        [Authorize(Roles ="Member")]
+        [Authorize(Policy = "MemberDep")]
+
         public IActionResult Member()
         {
             return View();
         }
-        [Authorize(Roles ="Admin")]
+        [Authorize(Policy = "AdminDep")]
         public IActionResult Admin()
         {
             return View();

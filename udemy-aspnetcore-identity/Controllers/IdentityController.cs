@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using udemy_aspnetcore_identity.Models;
 using udemy_aspnetcore_identity.Service;
 
@@ -39,9 +40,17 @@ namespace udemy_aspnetcore_identity.Controllers
                 {
                     var user = await _userManager.FindByEmailAsync(model.Username);
 
-                    if (await _userManager.IsInRoleAsync(user,"Member"))
+                   //var userClaims =await _userManager.GetClaimsAsync(user);
+
+                   // if (!userClaims.Any(x=>x.Type=="Department"))
+                   // {
+                   //     ModelState.AddModelError("Claim","User is not from Tech Department");
+                   //     return View(model);
+                   // }
+
+                    if (await _userManager.IsInRoleAsync(user, "Member"))
                     {
-                        return RedirectToAction("Member","Home");
+                        return RedirectToAction("Member", "Home");
                     }
 
                     //return RedirectToAction("Index");
@@ -60,14 +69,14 @@ namespace udemy_aspnetcore_identity.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Signin");
         }
-        public async Task<IActionResult> SingUp()
+        public async Task<IActionResult> SignUp()
         {
             var viewmodel = new SignUpViewModel() { Role = "Member" };
             return View(viewmodel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> SingUp(SignUpViewModel model)
+        public async Task<IActionResult> SignUp(SignUpViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -78,6 +87,7 @@ namespace udemy_aspnetcore_identity.Controllers
 
                     if (!roleResult.Succeeded)
                     {
+
                         var errors = roleResult.Errors.Select(x => x.Description);
                         ModelState.AddModelError("Role", string.Join(",", "Role could not be created."));
 
@@ -102,7 +112,11 @@ namespace udemy_aspnetcore_identity.Controllers
 
                     if (result.Succeeded)
                     {
-                        await _userManager.AddToRoleAsync(user,model.Role);
+                        var claim = new Claim("Department", model.Department);
+
+                        await _userManager.AddClaimAsync(user, claim);
+
+                        await _userManager.AddToRoleAsync(user, model.Role);
 
                         //var confirmationLink = Url.ActionLink("ConfirmEmail", "Identity", new { userId = user.Id, @token = token });
 
@@ -112,7 +126,7 @@ namespace udemy_aspnetcore_identity.Controllers
                     }
                     else
                     {
-                        ModelState.AddModelError("SingUp", string.Join("", result.Errors.Select(x => x.Description)));
+                        ModelState.AddModelError("SignUp", string.Join("", result.Errors.Select(x => x.Description)));
                         return View(model);
                     }
                 }
