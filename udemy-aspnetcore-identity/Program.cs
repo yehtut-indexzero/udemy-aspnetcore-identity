@@ -39,6 +39,12 @@ builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp")
 
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 
+builder.Services.AddAuthentication().AddFacebook(options => {
+
+    options.AppId = builder.Configuration["FacebookAppId"];
+    options.AppSecret =builder.Configuration["FacebookAppSecret"];
+});
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("MemberDep", p =>

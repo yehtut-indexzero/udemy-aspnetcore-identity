@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using udemy_aspnetcore_identity.Models;
@@ -35,35 +36,66 @@ namespace udemy_aspnetcore_identity.Controllers
             if (ModelState.IsValid)
             {
                 var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberMe, false);
-
-                if (result.Succeeded)
+                if (result.RequiresTwoFactor)
                 {
-                    var user = await _userManager.FindByEmailAsync(model.Username);
-
-                   //var userClaims =await _userManager.GetClaimsAsync(user);
-
-                   // if (!userClaims.Any(x=>x.Type=="Department"))
-                   // {
-                   //     ModelState.AddModelError("Claim","User is not from Tech Department");
-                   //     return View(model);
-                   // }
-
-                    if (await _userManager.IsInRoleAsync(user, "Member"))
-                    {
-                        return RedirectToAction("Member", "Home");
-                    }
-
-                    //return RedirectToAction("Index");
+                    return RedirectToAction("MFACheck");
                 }
                 else
                 {
-                    ModelState.AddModelError("Login", "Cannot login.");
+                    if (!result.Succeeded)
+                    {
+                        ModelState.AddModelError("Login", "Cannot login.");
+                    }
+                    else
+                    {
+                        return RedirectToAction("Index", "Home");
+                    }
                 }
             }
-
             return View(model);
 
         }
+
+        [HttpPost]
+        public IActionResult ExternalLogin(string provider, string returnUrl = null)
+        {
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, returnUrl);
+            var callBackUrl = Url.Action("ExternalLoginCallback");
+            properties.RedirectUri = callBackUrl;
+            return Challenge(properties, provider);
+        }
+
+        public async Task<IActionResult> ExternalLoginCallback()
+        {
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            var emailClaim = info.Principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
+            var user = new IdentityUser { Email = emailClaim.Value, UserName = emailClaim.Value };
+            await _userManager.CreateAsync(user);
+            await _userManager.AddLoginAsync(user, info);
+            await _signInManager.SignInAsync(user, false);
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        public IActionResult MFACheck()
+        {
+            return View(new MNFACheckViewModel());
+        }
+
+         [HttpPost]
+        public async Task<IActionResult> MFACheck(MNFACheckViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(model.Code, false, false);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home", null); 
+                }
+            }
+            return View(model);
+        }
+
         public async Task<IActionResult> Signout()
         {
             await _signInManager.SignOutAsync();
@@ -151,6 +183,56 @@ namespace udemy_aspnetcore_identity.Controllers
         public async Task<IActionResult> AccessDenied()
         {
             return View();
+        }
+
+        [Authorize]
+        public async Task<IActionResult> MFASetUp()
+        {
+            const string provider = "aspnetidentity";
+
+
+            var user = await _userManager.GetUserAsync(User);
+
+
+            await _userManager.ResetAuthenticatorKeyAsync(user);
+
+            var token = await _userManager.GetAuthenticatorKeyAsync(user);
+
+
+
+            //var qrcodeurl = string.Format("otpauth://totop/{0}:{1}?secret={2}&issuer={3}&digits=6", provider, user.Email, token, provider);
+            var qrCodeUrl = $"otpauth://totp/{provider}:{user.Email}?secret={token}&issuer={provider}&digits=6";
+
+            var modle = new MFAViewModel()
+            {
+                QRCodeUrl = qrCodeUrl,
+                Token = token
+            };
+
+            return View(modle);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> MFASetUp(MFAViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.GetUserAsync(User);
+
+                var succeed = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, model.Code);
+
+                if (succeed)
+                {
+                    await _userManager.SetTwoFactorEnabledAsync(user, true);
+                }
+                else
+                {
+                    ModelState.AddModelError("Verifty", "Your MFA Code could not be validated.");
+                }
+
+            }
+            return View(model);
         }
     }
 }

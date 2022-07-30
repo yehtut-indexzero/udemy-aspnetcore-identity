@@ -1,7 +1,14 @@
-﻿@model SignInViewModel;
+﻿@model SignInViewModel
+@using Microsoft.AspNetCore.Identity;
+
+@inject SignInManager<IdentityUser> signInManager
+
 @{
     ViewData["Title"] = "SignIn";
     //var roles = new List<String> { "Member", "Admin" };
+
+    var providers=await signInManager.GetExternalAuthenticationSchemesAsync();
+    
 }
 
 <form asp-action="SignIn" method="post">
@@ -21,5 +28,18 @@
     </div>
 
     <button type="submit" class="btn btn-primary">Sign In</button>
+
+</form>
+
+<form asp-action="ExternalLogin" method="post">
+    <div class="form-group">
+
+        @foreach (var item in providers)
+        {
+        <button type="submit" name="provider" value="@item.Name">Login with @item.DisplayName</button>            
+        }
+
+
+    </div>
 </form>
 
