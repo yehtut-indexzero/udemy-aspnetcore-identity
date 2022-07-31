@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using udemy_aspnetcore_identity.Data;
 using Microsoft.AspNetCore.Identity;
 using udemy_aspnetcore_identity.Service;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,10 +41,25 @@ builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp")
 
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 
-builder.Services.AddAuthentication().AddFacebook(options => {
+var issuers = builder.Configuration["Tokens:Issuer"];
+var audience = builder.Configuration["Tokens:Audience"];
+var key = builder.Configuration["Tokens:Key"];
+
+builder.Services.AddAuthentication().AddFacebook(options =>
+{
 
     options.AppId = builder.Configuration["FacebookAppId"];
-    options.AppSecret =builder.Configuration["FacebookAppSecret"];
+    options.AppSecret = builder.Configuration["FacebookAppSecret"];
+}).AddJwtBearer(options => {
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters {
+        ValidIssuer = issuers,
+        ValidAudience=audience,
+        IssuerSigningKey=new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+
+
+    };
 });
 
 builder.Services.AddAuthorization(options =>
@@ -59,6 +76,10 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddControllersWithViews();
+
+
+
+
 
 var app = builder.Build();
 
